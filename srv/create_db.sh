@@ -1,9 +1,10 @@
 #!/bin/bash
-# Интерактивное создание базы данных 1С через RAS
+# Интерактивное создание базы данных 1С через RAS и вывод списка
 
 # 1. Поиск пути к утилитам 1С
 VER_DIR=$(ls /opt/1cv8/x86_64/ | grep -E "^8\." | head -n 1)
-RAC_PATH="/opt/1cv8/x86_64/$VER_DIR/rac"
+BIN_PATH="/opt/1cv8/x86_64/$VER_DIR"
+RAC_PATH="$BIN_PATH/rac"
 
 if [ ! -f "$RAC_PATH" ]; then
     echo "❌ Ошибка: Утилита rac не найдена в $RAC_PATH"
@@ -29,11 +30,10 @@ CLUSTER_ID=$($RAC_PATH cluster list | grep cluster | awk '{print $3}')
 
 if [ -z "$CLUSTER_ID" ]; then
     echo "❌ Ошибка: Не удалось получить ID кластера. Проверьте, запущен ли RAS."
-    exit 1
+    exit 1;
 fi
 
 # 4. Выполнение команды создания
-# Мы используем локаль 'ru', СУБД 'PostgreSQL' и сервер 'localhost'
 $RAC_PATH infobase --cluster=$CLUSTER_ID create \
 --name="$DB_NAME" \
 --dbms=PostgreSQL \
@@ -46,8 +46,17 @@ $RAC_PATH infobase --cluster=$CLUSTER_ID create \
 
 if [ $? -eq 0 ]; then
     echo "-----------------------------------------------------"
-    echo "✅ УСПЕХ!"
-    echo "База '$DB_NAME' успешно создана в кластере 1С и PostgreSQL."
+    echo "✅ УСПЕХ! База '$DB_NAME' создана."
+    echo "-----------------------------------------------------"
+    
+    # 5. Переход в директорию и вывод списка всех баз
+    echo "📂 Переход в директорию: $BIN_PATH"
+    cd "$BIN_PATH" || exit
+    
+    echo "📋 Список существующих информационных баз:"
+    echo "-----------------------------------------------------"
+    # Команда выводит сводный список всех баз в кластере
+    $RAC_PATH infobase --cluster=$CLUSTER_ID summary list
     echo "-----------------------------------------------------"
 else
     echo "❌ Ошибка при создании базы. Проверьте пароль или наличие базы с таким именем."
