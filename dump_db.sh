@@ -62,7 +62,9 @@ read -p "Ваш выбор: " SOURCE_CHOICE
 # 5. Обработка выбора файла
 DT_FILE=""
 if [ "$SOURCE_CHOICE" -le "$COUNT" ] && [ $COUNT -gt 0 ]; then
-    DT_FILE="./${LOCAL_FILES[$((SOURCE_CHOICE-1))]}"
+    # Получаем АБСОЛЮТНЫЙ путь к локальному файлу
+    SELECTED_FILENAME="${LOCAL_FILES[$((SOURCE_CHOICE-1))]}"
+    DT_FILE="$(pwd)/$SELECTED_FILENAME"
 elif [ "$SOURCE_CHOICE" -eq "$WEB_CHOICE" ]; then
     DEFAULT_URL="http://mlgo.ru"
     read -p "Введите URL [Enter для $DEFAULT_URL]: " USER_URL
@@ -74,15 +76,19 @@ else
     echo "❌ Отмена."; exit 1
 fi
 
+
 # 6. Запуск импорта
 echo "⚙️  Восстановление данных в базу '$SELECTED_DB'..."
+echo "📂 Файл: $DT_FILE"
+
 $IBCMD_PATH infobase restore \
-    --dbms=PostgreSQL \
-    --db-server=localhost \
-    --db-name="$SELECTED_DB" \
-    --db-user=postgres \
-    --db-pwd="$PG_PASS" \
-    --file="$DT_FILE"
+    --dbms PostgreSQL \
+    --db-server localhost \
+    --db-name "$SELECTED_DB" \
+    --db-user postgres \
+    --db-pwd "$PG_PASS" \
+    --file "$DT_FILE"
+
 
 if [ $? -eq 0 ]; then
     echo "✅ Готово! Данные успешно загружены."
