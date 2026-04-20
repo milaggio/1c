@@ -42,7 +42,8 @@ $RAC_PATH infobase --cluster=$CLUSTER_ID create \
 --db-user=postgres \
 --db-pwd="$PG_PASS" \
 --locale=ru \
---create-database > /dev/null
+--create-database > 
+--license-distribution=allow > /dev/null
 
 if [ $? -eq 0 ]; then
     echo "-----------------------------------------------------"
